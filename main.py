@@ -1,6 +1,7 @@
 from app.database import engine, Base
 from app.models.review import Review
 from fastapi import FastAPI
+from app.routers.review import router as review_router
 
 
 app=FastAPI(
@@ -10,6 +11,7 @@ app=FastAPI(
 )
 print(Base.metadata.tables.keys())
 Base.metadata.create_all(bind=engine)
+app.include_router(review_router)
 
 @app.get("/")
 def root():
