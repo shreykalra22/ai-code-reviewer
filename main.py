@@ -1,10 +1,15 @@
+from app.database import engine, Base
+from app.models.review import Review
 from fastapi import FastAPI
+
 
 app=FastAPI(
     title="AI- Code Reviewer API",
     description="Backend API for AI powered code reviews",
     version="1.0.0"
 )
+print(Base.metadata.tables.keys())
+Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def root():
