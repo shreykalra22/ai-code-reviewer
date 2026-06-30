@@ -6,19 +6,28 @@ Review the following {language} code.
 Code:
 {code}
 
-Evaluate the code on the following criteria:
+Return ONLY valid JSON.
 
-1. Correctness
-2. Readability
-3. Performance
-4. Best Practices
-5. Security
+Do not add markdown.
+Do not use ```json.
+Do not add explanations before or after the JSON.
 
-Respond using EXACTLY this format:
+Return exactly in this format:
 
-Overall Review:
-Strengths:
-Weaknesses:
-Suggestions:
-Score:
+{{
+    "review": "Overall review of the code",
+    "strengths": [
+        "Strength 1",
+        "Strength 2"
+    ],
+    "weaknesses": [
+        "Weakness 1",
+        "Weakness 2"
+    ],
+    "suggestions": [
+        "Suggestion 1",
+        "Suggestion 2"
+    ],
+    "score": 8
+}}
 """

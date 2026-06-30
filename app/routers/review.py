@@ -1,17 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.database import get_db
 from app.schemas.review import ReviewCreate
-from app.services import review_service
+from app.services.review_service import review_code
 
 router = APIRouter()
 
 
 @router.post("/review")
-def review_code(request: ReviewCreate):
-
-    result = review_service.review_code(
-        language=request.language,
-        code=request.code
+def review(
+    review: ReviewCreate,
+    db: Session = Depends(get_db)
+):
+    return review_code(
+        db=db,
+        language=review.language,
+        code=review.code
     )
-
-    return result
