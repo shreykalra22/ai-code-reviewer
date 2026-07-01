@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -17,3 +19,21 @@ class ReviewCreate(BaseModel):
         description="Source code to be reviewed",
         example="print('Hello World')"
     )
+
+
+class ReviewResponse(BaseModel):
+
+    id: int
+
+    language: str
+
+    code: str
+
+    review: str
+
+    score: int
+
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -26,7 +26,7 @@ def review_code(
         # Generate AI response
         response = model.generate_content(prompt)
 
-        # Remove markdown wrappers
+        # Remove markdown wrappers if Gemini returns them
         response_text = response.text.strip()
 
         if response_text.startswith("```json"):
@@ -103,3 +103,20 @@ def get_reviews(
     )
 
     return reviews
+
+
+def get_review_by_id(
+    db: Session,
+    review_id: int
+):
+    """
+    Fetch a single review by its ID.
+    """
+
+    review = (
+        db.query(Review)
+        .filter(Review.id == review_id)
+        .first()
+    )
+
+    return review
