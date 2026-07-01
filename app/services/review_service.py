@@ -176,3 +176,34 @@ def delete_review(
     logger.info(f"Review {review_id} deleted successfully.")
 
     return review
+def update_review(
+    db: Session,
+    review_id: int,
+    review_text: str,
+    score: int
+):
+    """
+    Update an existing review.
+    """
+
+    logger.info(f"Updating review with ID {review_id}")
+
+    review = (
+        db.query(Review)
+        .filter(Review.id == review_id)
+        .first()
+    )
+
+    if review is None:
+        logger.warning(f"Review {review_id} not found.")
+        return None
+
+    review.review = review_text
+    review.score = score
+
+    db.commit()
+    db.refresh(review)
+
+    logger.info(f"Review {review_id} updated successfully.")
+
+    return review

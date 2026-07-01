@@ -19,6 +19,20 @@ class ReviewCreate(BaseModel):
         description="Source code to be reviewed",
         example="print('Hello World')"
     )
+class ReviewUpdate(BaseModel):
+
+    review: str = Field(
+        ...,
+        min_length=1,
+        description="Updated review text"
+    )
+
+    score: int = Field(
+        ...,
+        ge=0,
+        le=10,
+        description="Updated review score"
+    )    
 
 
 class ReviewResponse(BaseModel):

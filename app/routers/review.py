@@ -2,13 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import status
 from app.database import get_db
-from app.schemas.review import ReviewCreate, ReviewResponse
+from app.schemas.review import (
+    ReviewCreate,
+    ReviewResponse,
+    ReviewUpdate
+)
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.services.review_service import (
     review_code,
     get_reviews,
     get_review_by_id,
     delete_review,
+    update_review,
 )
 
 router = APIRouter()
@@ -85,3 +90,26 @@ def delete_review_endpoint(
         )
 
     return
+@router.put(
+    "/reviews/{review_id}",
+    response_model=ReviewResponse
+)
+def update_review_endpoint(
+    review_id: int,
+    request: ReviewUpdate,
+    db: Session = Depends(get_db)
+):
+    review = update_review(
+        db=db,
+        review_id=review_id,
+        review_text=request.review,
+        score=request.score
+    )
+
+    if review is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Review not found"
+        )
+
+    return review
