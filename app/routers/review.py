@@ -2,6 +2,8 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Path,
+    Query,
     status
 )
 from sqlalchemy.orm import Session
@@ -66,8 +68,8 @@ def create_review(
     response_model=list[ReviewResponse]
 )
 def read_reviews(
-    skip: int = 0,
-    limit: int = 10,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
     return get_reviews(
@@ -82,7 +84,7 @@ def read_reviews(
     response_model=ReviewResponse
 )
 def read_review(
-    review_id: int,
+    review_id: int = Path(..., ge=1),
     db: Session = Depends(get_db)
 ):
     review = get_review_by_id(
@@ -104,7 +106,7 @@ def read_review(
     status_code=status.HTTP_204_NO_CONTENT
 )
 def delete_review_endpoint(
-    review_id: int,
+    review_id: int = Path(..., ge=1),
     db: Session = Depends(get_db)
 ):
     review = delete_review(
@@ -126,8 +128,8 @@ def delete_review_endpoint(
     response_model=ReviewResponse
 )
 def update_review_endpoint(
-    review_id: int,
     request: ReviewUpdate,
+    review_id: int = Path(..., ge=1),
     db: Session = Depends(get_db)
 ):
     review = update_review(

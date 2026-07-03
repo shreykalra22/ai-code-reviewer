@@ -149,11 +149,12 @@ def get_reviews(
     )
 
     reviews = (
-        db.query(Review)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    db.query(Review)
+    .order_by(Review.created_at.desc())
+    .offset(skip)
+    .limit(limit)
+    .all()
+)
 
     logger.info(
         f"Fetched {len(reviews)} reviews."
@@ -216,14 +217,24 @@ def delete_review(
         )
         return None
 
-    db.delete(review)
-    db.commit()
+    try:
+        db.delete(review)
+        db.commit()
 
-    logger.info(
-        f"Review {review_id} deleted successfully."
-    )
+        logger.info(
+            f"Review {review_id} deleted successfully."
+        )
 
-    return review
+        return review
+
+    except Exception:
+        db.rollback()
+
+        logger.exception(
+            f"Database error while deleting review {review_id}."
+        )
+
+        raise
 
 
 def update_review(
@@ -252,14 +263,24 @@ def update_review(
         )
         return None
 
-    review.review = review_text
-    review.score = score
+    try:
+        review.review = review_text
+        review.score = score
 
-    db.commit()
-    db.refresh(review)
+        db.commit()
+        db.refresh(review)
 
-    logger.info(
-        f"Review {review_id} updated successfully."
-    )
+        logger.info(
+            f"Review {review_id} updated successfully."
+        )
 
-    return review
+        return review
+
+    except Exception:
+        db.rollback()
+
+        logger.exception(
+            f"Database error while updating review {review_id}."
+        )
+
+        raise
