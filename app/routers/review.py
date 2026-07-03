@@ -1,20 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status
+)
 from sqlalchemy.orm import Session
-from fastapi import status
+
 from app.database import get_db
 from app.schemas.review import (
     ReviewCreate,
     ReviewResponse,
     ReviewUpdate
 )
-from fastapi import APIRouter, Depends, HTTPException, status
 from app.services.review_service import (
-    review_code,
-    get_reviews,
-    get_review_by_id,
+    AIReviewError,
+    GeminiInvalidResponseError,
+    GeminiUnavailableError,
     delete_review,
+    get_review_by_id,
+    get_reviews,
+    review_code,
     update_review,
 )
+
 
 router = APIRouter()
 
@@ -27,11 +35,30 @@ def create_review(
     review: ReviewCreate,
     db: Session = Depends(get_db)
 ):
-    return review_code(
-        db=db,
-        language=review.language,
-        code=review.code
-    )
+    try:
+        return review_code(
+            db=db,
+            language=review.language,
+            code=review.code
+        )
+
+    except GeminiUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc)
+        ) from exc
+
+    except GeminiInvalidResponseError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc)
+        ) from exc
+
+    except AIReviewError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc)
+        ) from exc
 
 
 @router.get(
@@ -65,11 +92,13 @@ def read_review(
 
     if review is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Review not found"
         )
 
     return review
+
+
 @router.delete(
     "/reviews/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT
@@ -85,11 +114,13 @@ def delete_review_endpoint(
 
     if review is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Review not found"
         )
 
-    return
+    return None
+
+
 @router.put(
     "/reviews/{review_id}",
     response_model=ReviewResponse
@@ -108,7 +139,7 @@ def update_review_endpoint(
 
     if review is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Review not found"
         )
 

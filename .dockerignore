@@ -1,17 +1,25 @@
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 
 venv/
+.venv/
+
 .env
-
-.git
-.gitignore
-
-.idea
-.vscode
-
 *.db
 
+.git/
+.gitignore
+
+.idea/
+.vscode/
+
+.pytest_cache/
+
+tests/
+test_*.py
+
 README.md
+requirements-old.txt
+
+Dockerfile
+docker-compose.yml

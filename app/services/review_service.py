@@ -1,11 +1,27 @@
 import json
 
+from google.genai import errors
 from sqlalchemy.orm import Session
 
-from app.config import model
+from app.config import client, MODEL_NAME
 from app.logger import logger
 from app.models.review import Review
 from app.prompts import CODE_REVIEW_PROMPT
+
+
+class GeminiUnavailableError(Exception):
+    """Raised when the Gemini service is temporarily unavailable."""
+    pass
+
+
+class GeminiInvalidResponseError(Exception):
+    """Raised when Gemini returns invalid JSON."""
+    pass
+
+
+class AIReviewError(Exception):
+    """Raised when AI review generation fails unexpectedly."""
+    pass
 
 
 def review_code(
@@ -18,7 +34,9 @@ def review_code(
     and return the saved review.
     """
 
-    logger.info(f"Received review request for language: {language}")
+    logger.info(
+        f"Received review request for language: {language}"
+    )
 
     prompt = CODE_REVIEW_PROMPT.format(
         language=language,
@@ -28,13 +46,18 @@ def review_code(
     try:
         logger.info("Sending request to Gemini...")
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt
+        )
 
-        logger.info("Gemini generated response successfully.")
+        logger.info(
+            "Gemini generated response successfully."
+        )
 
-        # Remove markdown wrappers if Gemini returns them
         response_text = response.text.strip()
 
+        # Remove markdown wrappers if Gemini returns them
         if response_text.startswith("```json"):
             response_text = response_text[7:]
 
@@ -78,28 +101,38 @@ def review_code(
             "suggestions": data.get("suggestions", [])
         }
 
-    except json.JSONDecodeError:
-
-        logger.error("Gemini returned invalid JSON.")
-
-        return {
-            "success": False,
-            "review": "Gemini returned invalid JSON.",
-            "score": 0
-        }
-
-    except Exception:
-
+    except json.JSONDecodeError as exc:
         db.rollback()
 
-        logger.exception("Unexpected error while generating AI review.")
+        logger.exception(
+            "Gemini returned invalid JSON."
+        )
 
-        return {
-            "success": False,
-            "review": "Unable to generate AI review.",
-            "score": 0,
-            "error": "Internal Server Error"
-        }
+        raise GeminiInvalidResponseError(
+            "Gemini returned an invalid response."
+        ) from exc
+
+    except errors.ServerError as exc:
+        db.rollback()
+
+        logger.exception(
+            "Gemini service is temporarily unavailable."
+        )
+
+        raise GeminiUnavailableError(
+            "AI service is temporarily unavailable. Please try again later."
+        ) from exc
+
+    except Exception as exc:
+        db.rollback()
+
+        logger.exception(
+            "Unexpected error while generating AI review."
+        )
+
+        raise AIReviewError(
+            "Unable to generate AI review."
+        ) from exc
 
 
 def get_reviews(
@@ -122,7 +155,9 @@ def get_reviews(
         .all()
     )
 
-    logger.info(f"Fetched {len(reviews)} reviews.")
+    logger.info(
+        f"Fetched {len(reviews)} reviews."
+    )
 
     return reviews
 
@@ -135,7 +170,9 @@ def get_review_by_id(
     Fetch a single review by its ID.
     """
 
-    logger.info(f"Fetching review with ID {review_id}")
+    logger.info(
+        f"Fetching review with ID {review_id}"
+    )
 
     review = (
         db.query(Review)
@@ -144,11 +181,16 @@ def get_review_by_id(
     )
 
     if review:
-        logger.info(f"Review {review_id} found.")
+        logger.info(
+            f"Review {review_id} found."
+        )
     else:
-        logger.warning(f"Review {review_id} not found.")
+        logger.warning(
+            f"Review {review_id} not found."
+        )
 
     return review
+
 
 def delete_review(
     db: Session,
@@ -158,7 +200,9 @@ def delete_review(
     Delete a review by its ID.
     """
 
-    logger.info(f"Attempting to delete review with ID {review_id}")
+    logger.info(
+        f"Attempting to delete review with ID {review_id}"
+    )
 
     review = (
         db.query(Review)
@@ -167,15 +211,21 @@ def delete_review(
     )
 
     if review is None:
-        logger.warning(f"Review {review_id} not found.")
+        logger.warning(
+            f"Review {review_id} not found."
+        )
         return None
 
     db.delete(review)
     db.commit()
 
-    logger.info(f"Review {review_id} deleted successfully.")
+    logger.info(
+        f"Review {review_id} deleted successfully."
+    )
 
     return review
+
+
 def update_review(
     db: Session,
     review_id: int,
@@ -186,7 +236,9 @@ def update_review(
     Update an existing review.
     """
 
-    logger.info(f"Updating review with ID {review_id}")
+    logger.info(
+        f"Updating review with ID {review_id}"
+    )
 
     review = (
         db.query(Review)
@@ -195,7 +247,9 @@ def update_review(
     )
 
     if review is None:
-        logger.warning(f"Review {review_id} not found.")
+        logger.warning(
+            f"Review {review_id} not found."
+        )
         return None
 
     review.review = review_text
@@ -204,6 +258,8 @@ def update_review(
     db.commit()
     db.refresh(review)
 
-    logger.info(f"Review {review_id} updated successfully.")
+    logger.info(
+        f"Review {review_id} updated successfully."
+    )
 
     return review
