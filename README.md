@@ -215,6 +215,19 @@ Through this project, I gained practical experience with:
 - Build a frontend dashboard
 - Add CI/CD workflows
 
+## API Workflow
+
+The API follows a simple request-to-review workflow:
+
+1. A client submits source code and its programming language to the `POST /review` endpoint.
+2. The request is validated using Pydantic.
+3. The code is sent to the Gemini API using a structured review prompt.
+4. The AI response is parsed and validated.
+5. The generated review and score are stored in the SQLite database.
+6. The structured review is returned to the client as a JSON response.
+
+This design keeps API routing, validation, AI processing, and database operations separated across dedicated application layers.
+
 ## 👨‍💻 Author
 
 **Shrey Kalra**
