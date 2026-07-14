@@ -3,11 +3,20 @@ from app.models.review import Review
 from fastapi import FastAPI
 from app.routers.review import router as review_router
 from app.middleware import log_requests
-
+from fastapi.middleware.cors import CORSMiddleware
 app=FastAPI(
     title="AI- Code Reviewer API",
     description="Backend API for AI powered code reviews",
     version="1.0.0"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.middleware("http")(log_requests)
 print(Base.metadata.tables.keys())
