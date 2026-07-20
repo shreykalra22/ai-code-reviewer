@@ -69,6 +69,7 @@ def review_code(
         logger.info("Parsing Gemini JSON response.")
 
         data = json.loads(response_text)
+        
 
         logger.info("Creating Review object.")
 
@@ -76,6 +77,7 @@ def review_code(
             language=language,
             code=code,
             review=data["review"],
+            improved_code=data.get("improved_code", ""),
             score=int(data["score"])
         )
 
@@ -90,16 +92,17 @@ def review_code(
         )
 
         return {
-            "success": True,
-            "id": new_review.id,
-            "language": new_review.language,
-            "review": new_review.review,
-            "score": new_review.score,
-            "created_at": new_review.created_at.isoformat(),
-            "strengths": data.get("strengths", []),
-            "weaknesses": data.get("weaknesses", []),
-            "suggestions": data.get("suggestions", [])
-        }
+        "success": True,
+        "id": new_review.id,
+        "language": new_review.language,
+        "review": new_review.review,
+        "score": new_review.score,
+        "created_at": new_review.created_at.isoformat(),
+        "strengths": data.get("strengths", []),
+        "weaknesses": data.get("weaknesses", []),
+        "suggestions": data.get("suggestions", []),
+        "improved_code": new_review.improved_code
+}
 
     except json.JSONDecodeError as exc:
         db.rollback()

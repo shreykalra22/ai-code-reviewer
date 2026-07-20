@@ -70,11 +70,11 @@ class ReviewUpdate(BaseModel):
 
 
 class ReviewResponse(BaseModel):
-
     id: int
     language: str
     code: str
     review: str
+    improved_code: str
     score: int
     created_at: datetime
 

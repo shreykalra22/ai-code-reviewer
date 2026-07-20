@@ -1,14 +1,25 @@
-from app.database import engine, Base
-from app.models.review import Review
 from fastapi import FastAPI
-from app.routers.review import router as review_router
-from app.middleware import log_requests
 from fastapi.middleware.cors import CORSMiddleware
-app=FastAPI(
-    title="AI- Code Reviewer API",
-    description="Backend API for AI powered code reviews",
-    version="1.0.0"
+
+from app.database import Base, engine
+from app.middleware import log_requests
+
+# Import Models
+from app.models.review import Review
+from app.models.user import User
+
+# Import Routers
+from app.routers.review import router as review_router
+from app.routers.dashboard import router as dashboard_router
+from app.routers.auth import router as auth_router
+
+
+app = FastAPI(
+    title="AI Code Reviewer API",
+    description="Backend API for AI Powered Code Reviews",
+    version="1.0.0",
 )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -18,20 +29,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.middleware("http")(log_requests)
-print(Base.metadata.tables.keys())
+
 Base.metadata.create_all(bind=engine)
+
 app.include_router(review_router)
+app.include_router(dashboard_router)
+app.include_router(auth_router)
+
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to the AI Code Reviewer API!"
+    return {
+        "message": "Welcome to the AI Code Reviewer API!"
     }
-
 
 
 @app.get("/health")
 def health():
-    return {"status": "Ok",
-            "version": "1.0.0"
-            }
+    return {
+        "status": "OK",
+        "version": "1.0.0"
+    }
